@@ -1,8 +1,10 @@
 package hr.scuric.dewallet.budget.controller;
 
 import hr.scuric.dewallet.budget.enums.ExpenseType;
+import hr.scuric.dewallet.budget.enums.Period;
 import hr.scuric.dewallet.budget.models.request.ExpenseRequest;
 import hr.scuric.dewallet.budget.models.response.ExpenseResponse;
+import hr.scuric.dewallet.budget.models.response.ExpenseStatistics;
 import hr.scuric.dewallet.budget.service.ExpenseService;
 import hr.scuric.dewallet.common.exceptions.DeWalletException;
 import hr.scuric.dewallet.common.swagger.OpenApiTags;
@@ -30,42 +32,42 @@ public class ExpenseController {
     @PostMapping("/expense")
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Insert new expense.")
     public ResponseEntity<ExpenseResponse> registerExpense(@Valid @RequestBody ExpenseRequest request) throws DeWalletException {
-        ExpenseResponse response = expenseService.insertExpense(request);
+        ExpenseResponse response = this.expenseService.insertExpense(request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/expense/all")
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Get all categories.")
     public ResponseEntity<List<ExpenseResponse>> getCategories() {
-        List<ExpenseResponse> response = expenseService.getExpenses();
+        List<ExpenseResponse> response = this.expenseService.getExpenses();
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/expense/{id}")
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Get expense by ID.")
     public ResponseEntity<ExpenseResponse> getExpense(@NonNull @PathVariable(name = "id") Long id) throws DeWalletException {
-        ExpenseResponse response = expenseService.getExpense(id);
+        ExpenseResponse response = this.expenseService.getExpense(id);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PutMapping("/expense/{id}")
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Update expense.")
     public ResponseEntity<ExpenseResponse> updateExpense(@NonNull @PathVariable(name = "id") Long id, @Valid @RequestBody ExpenseRequest request) throws DeWalletException {
-        ExpenseResponse response = expenseService.updateExpense(id, request);
+        ExpenseResponse response = this.expenseService.updateExpense(id, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PutMapping("/expense/{id}/status/{active}")
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Update expense status.")
-    public ResponseEntity<ExpenseResponse> updateExpenseStatus(@NonNull @PathVariable(name = "id") Long id, @NonNull @PathVariable(name = "active") boolean active) throws DeWalletException {
-        ExpenseResponse response = expenseService.updateExpenseStatus(id, active);
+    public ResponseEntity<ExpenseResponse> updateExpenseStatus(@NonNull @PathVariable(name = "id") Long id, @NonNull @PathVariable(name = "active") Boolean active) throws DeWalletException {
+        ExpenseResponse response = this.expenseService.updateExpenseStatus(id, active);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/expense/{id}")
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Delete expense.")
     public ResponseEntity<ExpenseResponse> deleteExpense(@NonNull @PathVariable(name = "id") Long id) throws DeWalletException {
-        HttpStatus response = expenseService.deleteExpense(id);
+        HttpStatus response = this.expenseService.deleteExpense(id);
         return new ResponseEntity<>(response);
     }
 
@@ -77,7 +79,19 @@ public class ExpenseController {
                                                                 @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
                                                                 @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
                                                                 @RequestParam(name = "type", required = false) ExpenseType type) {
-        List<ExpenseResponse> response = expenseService.filterExpenses(categoryId, minAmount, maxAmount, startDate, endDate, type);
+        List<ExpenseResponse> response = this.expenseService.filterExpenses(categoryId, minAmount, maxAmount, startDate, endDate, type);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/expense/statistics")
+    @Operation(tags = OpenApiTags.EXPENSE, summary = "Statistics.")
+    public ResponseEntity<ExpenseStatistics> filterExpenses(@RequestParam(name = "period") Period period,
+                                                            @RequestParam(name = "month", required = false) Integer month,
+                                                            @RequestParam(name = "year") Integer year,
+                                                            @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                            @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                                            @RequestParam(name = "categoryId", required = false) Long categoryId) throws DeWalletException {
+        ExpenseStatistics response = this.expenseService.getStatistics(period, month, year, startDate, endDate, categoryId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

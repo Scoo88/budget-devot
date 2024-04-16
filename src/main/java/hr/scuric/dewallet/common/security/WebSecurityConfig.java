@@ -18,7 +18,7 @@ public class WebSecurityConfig {
 
     private final String[] SWAGGER_LIST = {"/docs", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/swagger-resources", "/v3/api-docs/**", "/proxy/**", "/api/v1/budget/client/registration"};
     private final String[] PERMIT_ALL_LIST = {"/api/v1/budget/registration"};
-    private final String[] AUTHENTICATE_FIRST_LIST = {"/api/v1/budget/client*", "/api/v1/budget/category*", "/api/v1/budget/expense*"};
+    private final String[] AUTHENTICATE_FIRST_LIST = {"/api/v1/budget/client*", "/api/v1/budget/category*/**", "/api/v1/budget/expense*/**"};
 
     @Bean
     UserDetailsService userDetailsService() {
@@ -33,20 +33,20 @@ public class WebSecurityConfig {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService());
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setUserDetailsService(this.userDetailsService());
+        authProvider.setPasswordEncoder(this.passwordEncoder());
         return authProvider;
     }
 
     @Bean
     SecurityFilterChain configure(HttpSecurity http) throws Exception {
-        http.authenticationProvider(authenticationProvider());
+        http.authenticationProvider(this.authenticationProvider());
 
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PERMIT_ALL_LIST).permitAll()
-                        .requestMatchers(SWAGGER_LIST).permitAll()
-                        .requestMatchers(AUTHENTICATE_FIRST_LIST).authenticated()
+                        .requestMatchers(this.PERMIT_ALL_LIST).permitAll()
+                        .requestMatchers(this.SWAGGER_LIST).permitAll()
+                        .requestMatchers(this.AUTHENTICATE_FIRST_LIST).authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/budget/client").permitAll()
                         .anyRequest().permitAll()
                 )

@@ -1,5 +1,5 @@
 package hr.scuric.dewallet.budget.enums;
 
 public enum Period {
-    MONTH, FIRST_QUARTER, SECOND_QUARTER, THIRD_QUARTER, FOURTH_QUARTER, YEAR
+    MONTH, Q1, Q2, Q3, Q4, YEAR
 }
