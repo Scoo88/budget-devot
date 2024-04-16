@@ -82,9 +82,7 @@ public class ExpenseService {
         }
 
         this.expenseRepository.saveAndFlush(entity);
-
         this.clientService.handleBalance(Collections.singletonList(entity), oldAmount);
-
         return ExpenseResponse.fromEntity(entity);
     }
 
@@ -135,51 +133,33 @@ public class ExpenseService {
             end = endDate.plusDays(1).atStartOfDay();
         }
 
-
         List<ExpenseStatisticsView> statistics = this.expenseRepository.getStatistics(start, end);
         if (!statistics.isEmpty()) {
             TotalsResponse totals = new TotalsResponse();
 
             for (ExpenseStatisticsView stat : statistics) {
-                switch (stat.getType()) {
-                    case INPUT -> totals.setTotalEarned(stat.getTotal());
-                    case OUTPUT -> totals.setTotalSpent(stat.getTotal());
-                }
+                setTotalByType(totals, stat);
             }
 
-            BigDecimal sum = totals.getTotalSpent().add(totals.getTotalEarned());
-            totals.setTotalEarnedPercent(totals.getTotalEarned().divide(sum, this.MC_2).multiply(BigDecimal.valueOf(100), this.MC_2));
-            totals.setTotalSpentPercent(totals.getTotalSpent().divide(sum, this.MC_2).multiply(BigDecimal.valueOf(100), this.MC_2));
+            this.calculatePercentages(totals);
             response.setTotals(totals);
         }
 
         if (!period.equals(Period.MONTH)) {
-            List<ExpensesPerMonth> expensesPerMonths = this.expenseRepository.getYearOverview(start, end);
             Map<String, TotalsResponse> overview = new HashMap<>();
 
+            List<ExpensesPerMonth> expensesPerMonths = this.expenseRepository.getYearOverview(start, end);
             expensesPerMonths.forEach(expensesPerMonth -> {
                 String mapMonth = expensesPerMonth.getMonth();
                 BigDecimal total = expensesPerMonth.getTotal();
                 if (!overview.containsKey(mapMonth)) {
                     TotalsResponse newTotals = new TotalsResponse();
-
-                    switch (expensesPerMonth.getType()) {
-                        case INPUT -> newTotals.setTotalEarned(total);
-                        case OUTPUT -> newTotals.setTotalSpent(total);
-                    }
-
+                    setTotalByType(expensesPerMonth.getType(), newTotals, total);
                     overview.put(mapMonth, newTotals);
                 } else {
                     TotalsResponse totals = overview.get(mapMonth);
-
-                    switch (expensesPerMonth.getType()) {
-                        case INPUT -> totals.setTotalEarned(total);
-                        case OUTPUT -> totals.setTotalSpent(total);
-                    }
-
-                    BigDecimal sum = totals.getTotalSpent().add(totals.getTotalEarned());
-                    totals.setTotalEarnedPercent(totals.getTotalEarned().divide(sum, this.MC_2).multiply(BigDecimal.valueOf(100), this.MC_2));
-                    totals.setTotalSpentPercent(totals.getTotalSpent().divide(sum, this.MC_2).multiply(BigDecimal.valueOf(100), this.MC_2));
+                    setTotalByType(expensesPerMonth.getType(), totals, total);
+                    this.calculatePercentages(totals);
                 }
             });
             response.setOverview(overview);
@@ -196,7 +176,8 @@ public class ExpenseService {
     }
 
     private Map<String, LocalDateTime> calculatePeriod(Period period, Integer month, Integer year) throws DeWalletException {
-        LocalDate start, end;
+        LocalDate start;
+        LocalDate end;
 
         switch (period) {
             case MONTH -> {
@@ -230,5 +211,23 @@ public class ExpenseService {
             default -> throw new DeWalletException(Messages.INVALID_INPUT_TYPE);
         }
         return Map.of("start", start.atStartOfDay(), "end", end.plusDays(1).atStartOfDay());
+    }
+
+    private static void setTotalByType(ExpenseType expensesPerMonth, TotalsResponse newTotals, BigDecimal total) {
+        switch (expensesPerMonth) {
+            case INPUT -> newTotals.setTotalEarned(total);
+            case OUTPUT -> newTotals.setTotalSpent(total);
+        }
+    }
+
+    private static void setTotalByType(TotalsResponse totals, ExpenseStatisticsView stat) {
+        BigDecimal total = stat.getTotal();
+        setTotalByType(stat.getType(), totals, total);
+    }
+
+    private void calculatePercentages(TotalsResponse totals) {
+        BigDecimal sum = totals.getTotalSpent().add(totals.getTotalEarned());
+        totals.setTotalEarnedPercent(totals.getTotalEarned().divide(sum, this.MC_2).multiply(BigDecimal.valueOf(100), this.MC_2));
+        totals.setTotalSpentPercent(totals.getTotalSpent().divide(sum, this.MC_2).multiply(BigDecimal.valueOf(100), this.MC_2));
     }
 }
