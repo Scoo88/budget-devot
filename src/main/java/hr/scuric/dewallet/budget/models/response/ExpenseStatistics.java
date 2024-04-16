@@ -1,17 +1,30 @@
 package hr.scuric.dewallet.budget.models.response;
 
-import hr.scuric.dewallet.budget.enums.ExpenseType;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import hr.scuric.dewallet.budget.enums.Period;
 import lombok.Data;
 
-import java.math.BigDecimal;
+import java.util.Map;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExpenseStatistics {
+    @JsonProperty(value = "period")
     private Period period;
+
+    @JsonProperty(value = "month")
     private Integer month;
+
+    @JsonProperty(value = "year")
     private Integer year;
+
+    @JsonProperty(value = "category")
     private CategoryResponse category;
-    private ExpenseType type;
-    private BigDecimal total;
+
+    @JsonProperty(value = "totals")
+    private TotalsResponse totals;
+
+    @JsonProperty(value = "overview")
+    private Map<String, TotalsResponse> overview;
 }

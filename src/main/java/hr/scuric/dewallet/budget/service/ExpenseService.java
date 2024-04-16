@@ -7,8 +7,11 @@ import hr.scuric.dewallet.budget.models.entity.ExpenseEntity;
 import hr.scuric.dewallet.budget.models.request.ExpenseRequest;
 import hr.scuric.dewallet.budget.models.response.ExpenseResponse;
 import hr.scuric.dewallet.budget.models.response.ExpenseStatistics;
+import hr.scuric.dewallet.budget.models.response.TotalsResponse;
 import hr.scuric.dewallet.budget.repository.ExpenseRepository;
 import hr.scuric.dewallet.budget.repository.ExpenseSpecification;
+import hr.scuric.dewallet.budget.repository.ExpenseStatisticsView;
+import hr.scuric.dewallet.budget.repository.ExpensesPerMonth;
 import hr.scuric.dewallet.client.models.entity.ClientEntity;
 import hr.scuric.dewallet.client.service.ClientService;
 import hr.scuric.dewallet.common.exceptions.DeWalletException;
@@ -21,7 +24,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -32,6 +38,8 @@ public class ExpenseService {
     private final CategoryService categoryService;
     private final ClientService clientService;
     private final IAuthentificationFacade authentication;
+
+    private final MathContext MC_2 = new MathContext(2, RoundingMode.HALF_UP);
 
     public ExpenseResponse insertExpense(ExpenseRequest request) throws DeWalletException {
         ClientEntity clientEntity = this.authentication.getClientEntity();
@@ -45,9 +53,7 @@ public class ExpenseService {
     public List<ExpenseResponse> getExpenses() {
         List<ExpenseEntity> all = this.expenseRepository.findAllByClientId(this.authentication.getPrincipalId());
         List<ExpenseResponse> response = new ArrayList<>();
-        all.forEach(entity -> {
-            response.add(ExpenseResponse.fromEntity(entity));
-        });
+        all.forEach(entity -> response.add(ExpenseResponse.fromEntity(entity)));
         return response;
     }
 
@@ -108,17 +114,77 @@ public class ExpenseService {
         return response;
     }
 
-    public ExpenseStatistics getStatistics(Period period, Optional<Integer> month, Integer year, Optional<Long> categoryId) throws DeWalletException {
+    public ExpenseStatistics getStatistics(Period period, Integer month, Integer year, LocalDate startDate, LocalDate endDate, Long categoryId) throws DeWalletException {
         ExpenseStatistics response = new ExpenseStatistics();
         response.setPeriod(period);
-        response.setMonth(month.orElse(null));
+        response.setMonth(month);
         response.setYear(year);
 
-        Map<String, LocalDate> dates = this.calculatePeriod(period, month, year);
-//        this.expenseRepository.getStatistics(dates.keySet())
-//        response.setType();
-//        response.setTotal();
-        return null;
+        if (Objects.nonNull(categoryId)) {
+            response.setCategory(this.categoryService.getCategory(categoryId));
+        }
+
+        LocalDateTime start;
+        LocalDateTime end;
+        if (Objects.nonNull(period)) {
+            Map<String, LocalDateTime> dates = this.calculatePeriod(period, month, year);
+            start = dates.get("start");
+            end = dates.get("end");
+        } else {
+            start = startDate.atStartOfDay();
+            end = endDate.plusDays(1).atStartOfDay();
+        }
+
+
+        List<ExpenseStatisticsView> statistics = this.expenseRepository.getStatistics(start, end);
+        if (!statistics.isEmpty()) {
+            TotalsResponse totals = new TotalsResponse();
+
+            for (ExpenseStatisticsView stat : statistics) {
+                switch (stat.getType()) {
+                    case INPUT -> totals.setTotalEarned(stat.getTotal());
+                    case OUTPUT -> totals.setTotalSpent(stat.getTotal());
+                }
+            }
+
+            BigDecimal sum = totals.getTotalSpent().add(totals.getTotalEarned());
+            totals.setTotalEarnedPercent(totals.getTotalEarned().divide(sum, this.MC_2).multiply(BigDecimal.valueOf(100), this.MC_2));
+            totals.setTotalSpentPercent(totals.getTotalSpent().divide(sum, this.MC_2).multiply(BigDecimal.valueOf(100), this.MC_2));
+            response.setTotals(totals);
+        }
+
+        if (!period.equals(Period.MONTH)) {
+            List<ExpensesPerMonth> expensesPerMonths = this.expenseRepository.getYearOverview(start, end);
+            Map<String, TotalsResponse> overview = new HashMap<>();
+
+            expensesPerMonths.forEach(expensesPerMonth -> {
+                String mapMonth = expensesPerMonth.getMonth();
+                BigDecimal total = expensesPerMonth.getTotal();
+                if (!overview.containsKey(mapMonth)) {
+                    TotalsResponse newTotals = new TotalsResponse();
+
+                    switch (expensesPerMonth.getType()) {
+                        case INPUT -> newTotals.setTotalEarned(total);
+                        case OUTPUT -> newTotals.setTotalSpent(total);
+                    }
+
+                    overview.put(mapMonth, newTotals);
+                } else {
+                    TotalsResponse totals = overview.get(mapMonth);
+
+                    switch (expensesPerMonth.getType()) {
+                        case INPUT -> totals.setTotalEarned(total);
+                        case OUTPUT -> totals.setTotalSpent(total);
+                    }
+
+                    BigDecimal sum = totals.getTotalSpent().add(totals.getTotalEarned());
+                    totals.setTotalEarnedPercent(totals.getTotalEarned().divide(sum, this.MC_2).multiply(BigDecimal.valueOf(100), this.MC_2));
+                    totals.setTotalSpentPercent(totals.getTotalSpent().divide(sum, this.MC_2).multiply(BigDecimal.valueOf(100), this.MC_2));
+                }
+            });
+            response.setOverview(overview);
+        }
+        return response;
     }
 
     private ExpenseEntity getById(Long id) throws DeWalletException {
@@ -129,41 +195,40 @@ public class ExpenseService {
         return optionalExpense.get();
     }
 
-    private Map<String, LocalDate> calculatePeriod(Period period, Optional<Integer> month, Integer year) throws DeWalletException {
+    private Map<String, LocalDateTime> calculatePeriod(Period period, Integer month, Integer year) throws DeWalletException {
         LocalDate start, end;
 
         switch (period) {
-            case MONTH:
-                if (month.isPresent()) {
-                    start = LocalDate.of(year, month.get(), 1);
+            case MONTH -> {
+                if (Objects.nonNull(month)) {
+                    start = LocalDate.of(year, month, 1);
                     end = start.plusMonths(1).minusDays(1);
                 } else {
                     throw new DeWalletException(Messages.INVALID_INPUT_TYPE);
                 }
-                break;
-            case YEAR:
+            }
+            case YEAR -> {
                 start = LocalDate.of(year, 1, 1);
                 end = start.plusYears(1).minusDays(1);
-                break;
-            case FIRST_QUARTER:
+            }
+            case Q1 -> {
                 start = LocalDate.of(year, 1, 1);
                 end = LocalDate.of(year, 3, 31);
-                break;
-            case SECOND_QUARTER:
+            }
+            case Q2 -> {
                 start = LocalDate.of(year, 4, 1);
                 end = LocalDate.of(year, 6, 30);
-                break;
-            case THIRD_QUARTER:
+            }
+            case Q3 -> {
                 start = LocalDate.of(year, 7, 1);
                 end = LocalDate.of(year, 9, 30);
-                break;
-            case FOURTH_QUARTER:
+            }
+            case Q4 -> {
                 start = LocalDate.of(year, 10, 1);
                 end = LocalDate.of(year, 12, 31);
-                break;
-            default:
-                throw new DeWalletException(Messages.INVALID_INPUT_TYPE);
+            }
+            default -> throw new DeWalletException(Messages.INVALID_INPUT_TYPE);
         }
-        return Map.of("start", start, "end", end);
+        return Map.of("start", start.atStartOfDay(), "end", end.plusDays(1).atStartOfDay());
     }
 }
