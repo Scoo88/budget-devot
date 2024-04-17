@@ -1,4 +1,4 @@
-package hr.scuric.dewallet.common.model;
+package hr.scuric.dewallet.common.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

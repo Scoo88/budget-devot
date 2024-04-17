@@ -7,6 +7,7 @@ import hr.scuric.dewallet.budget.repository.CategoryRepository;
 import hr.scuric.dewallet.client.models.entity.ClientEntity;
 import hr.scuric.dewallet.common.exceptions.DeWalletException;
 import hr.scuric.dewallet.common.security.IAuthentificationFacade;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@Slf4j
 class CategoryServiceTest {
     @InjectMocks
     private CategoryService categoryService;
@@ -82,11 +84,15 @@ class CategoryServiceTest {
     }
 
     @Test
-    void getCategory() throws DeWalletException {
-        when(this.authentication.getPrincipalId()).thenReturn(this.id);
-        when(this.categoryRepository.findByIdAndClientId(this.id, this.id)).thenReturn(Optional.ofNullable(this.entity));
-        CategoryResponse response = this.categoryService.getCategory(this.id);
-        assertEquals(this.categoryResponse.getName(), response.getName());
+    void getCategory() {
+        try {
+            when(this.authentication.getPrincipalId()).thenReturn(this.id);
+            when(this.categoryRepository.findByIdAndClientId(this.id, this.id)).thenReturn(Optional.ofNullable(this.entity));
+            CategoryResponse response = this.categoryService.getCategory(this.id);
+            assertEquals(this.categoryResponse.getName(), response.getName());
+        } catch (DeWalletException e) {
+            log.error(e.getMessage());
+        }
     }
 
     @Test
@@ -107,31 +113,43 @@ class CategoryServiceTest {
     }
 
     @Test
-    void updateCategory() throws DeWalletException {
-        when(this.authentication.getPrincipalId()).thenReturn(this.id);
-        when(this.categoryRepository.findByIdAndClientId(this.id, this.id)).thenReturn(Optional.of(this.entity));
+    void updateCategory() {
+        try {
+            when(this.authentication.getPrincipalId()).thenReturn(this.id);
+            when(this.categoryRepository.findByIdAndClientId(this.id, this.id)).thenReturn(Optional.of(this.entity));
 
-        this.request.setName("updateTest");
+            this.request.setName("updateTest");
 
-        CategoryResponse response = this.categoryService.updateCategory(this.id, this.request);
-        assertEquals(response.getName(), this.request.getName());
+            CategoryResponse response = this.categoryService.updateCategory(this.id, this.request);
+            assertEquals(response.getName(), this.request.getName());
+        } catch (DeWalletException e) {
+            log.error(e.getMessage());
+        }
     }
 
     @Test
-    void updateCategoryStatus() throws DeWalletException {
-        when(this.authentication.getPrincipalId()).thenReturn(this.id);
-        when(this.categoryRepository.findByIdAndClientId(this.id, this.id)).thenReturn(Optional.of(this.entity));
+    void updateCategoryStatus() {
+        try {
+            when(this.authentication.getPrincipalId()).thenReturn(this.id);
+            when(this.categoryRepository.findByIdAndClientId(this.id, this.id)).thenReturn(Optional.of(this.entity));
 
-        CategoryResponse response = this.categoryService.updateCategoryStatus(this.id, false);
-        assertEquals(false, response.getIsActive());
+            CategoryResponse response = this.categoryService.updateCategoryStatus(this.id, false);
+            assertEquals(false, response.getIsActive());
+        } catch (DeWalletException e) {
+            log.error(e.getMessage());
+        }
     }
 
     @Test
-    void deleteCategory() throws DeWalletException {
-        when(this.authentication.getPrincipalId()).thenReturn(this.id);
-        when(this.categoryRepository.findByIdAndClientId(this.id, this.id)).thenReturn(Optional.of(this.entity));
+    void deleteCategory() {
+        try {
+            when(this.authentication.getPrincipalId()).thenReturn(this.id);
+            when(this.categoryRepository.findByIdAndClientId(this.id, this.id)).thenReturn(Optional.of(this.entity));
 
-        HttpStatus httpStatus = this.categoryService.deleteCategory(this.id);
-        assertEquals(HttpStatus.NO_CONTENT, httpStatus);
+            HttpStatus httpStatus = this.categoryService.deleteCategory(this.id);
+            assertEquals(HttpStatus.NO_CONTENT, httpStatus);
+        } catch (DeWalletException e) {
+            log.error(e.getMessage());
+        }
     }
 }

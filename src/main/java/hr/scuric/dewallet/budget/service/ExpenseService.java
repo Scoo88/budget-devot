@@ -44,7 +44,10 @@ public class ExpenseService {
 
     public ExpenseResponse insertExpense(ExpenseRequest request) throws DeWalletException {
         ClientEntity clientEntity = this.authentication.getClientEntity();
-        CategoryEntity categoryEntity = this.categoryService.getById(request.getCategoryId());
+        CategoryEntity categoryEntity = new CategoryEntity();
+        if (Objects.nonNull(request.getCategoryId())) {
+            categoryEntity = this.categoryService.getById(request.getCategoryId());
+        }
         ExpenseEntity entity = ExpenseEntity.fromRequest(request, categoryEntity, clientEntity);
         this.expenseRepository.saveAndFlush(entity);
         this.clientService.handleBalance(Collections.singletonList(entity), null);

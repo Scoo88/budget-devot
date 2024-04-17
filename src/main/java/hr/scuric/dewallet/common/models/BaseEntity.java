@@ -1,4 +1,4 @@
-package hr.scuric.dewallet.common.model;
+package hr.scuric.dewallet.common.models;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
