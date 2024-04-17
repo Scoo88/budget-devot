@@ -30,6 +30,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static hr.scuric.dewallet.budget.enums.Period.MONTH;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -38,8 +40,6 @@ public class ExpenseService {
     private final CategoryService categoryService;
     private final ClientService clientService;
     private final IAuthentificationFacade authentication;
-
-    private final MathContext MC_2 = new MathContext(2, RoundingMode.HALF_UP);
     private final MathContext MC_4 = new MathContext(4, RoundingMode.HALF_UP);
 
     public ExpenseResponse insertExpense(ExpenseRequest request) throws DeWalletException {
@@ -104,7 +104,7 @@ public class ExpenseService {
     }
 
     public List<ExpenseResponse> filterExpenses(Long categoryId, BigDecimal minAmount, BigDecimal maxAmount, LocalDate startDate, LocalDate endDate, ExpenseType type) {
-        Specification<ExpenseEntity> specification = ExpenseSpecification.filterBy(categoryId, minAmount, maxAmount, startDate, endDate, type);
+        Specification<ExpenseEntity> specification = ExpenseSpecification.filterBy(this.authentication.getPrincipalId(), categoryId, minAmount, maxAmount, startDate, endDate, type);
         List<ExpenseEntity> expenseEntities = this.expenseRepository.findAll(specification);
         List<ExpenseResponse> response = new ArrayList<>();
         for (ExpenseEntity entity : expenseEntities) {
@@ -146,7 +146,7 @@ public class ExpenseService {
             response.setTotals(totals);
         }
 
-        if (!period.equals(Period.MONTH)) {
+        if (Objects.nonNull(period) && !period.equals(MONTH)) {
             Map<String, TotalsResponse> overview = new HashMap<>();
 
             List<ExpensesPerMonth> expensesPerMonths = this.expenseRepository.getOverview(start, end);
