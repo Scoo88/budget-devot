@@ -4,8 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BudgetApplication {
+public class DeWalletApplication {
     public static void main(String[] args) {
-        SpringApplication.run(BudgetApplication.class, args);
+        SpringApplication.run(DeWalletApplication.class, args);
     }
 }

@@ -3,6 +3,7 @@ package hr.scuric.dewallet.budget.repository;
 import hr.scuric.dewallet.budget.enums.ExpenseType;
 import hr.scuric.dewallet.budget.models.entity.CategoryEntity;
 import hr.scuric.dewallet.budget.models.entity.ExpenseEntity;
+import hr.scuric.dewallet.client.models.entity.ClientEntity;
 import jakarta.persistence.criteria.Join;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
@@ -12,13 +13,21 @@ import java.time.LocalDate;
 
 @NoArgsConstructor
 public class ExpenseSpecification {
-    public static Specification<ExpenseEntity> filterBy(Long categoryId, BigDecimal minAmount, BigDecimal maxAmount, LocalDate startDate, LocalDate endDate, ExpenseType type) {
+    public static Specification<ExpenseEntity> filterBy(Long clientId, Long categoryId, BigDecimal minAmount, BigDecimal maxAmount, LocalDate startDate, LocalDate endDate, ExpenseType type) {
         return Specification
-                .where(hasCategory(categoryId))
+                .where(hasClient(clientId))
+                .and(hasCategory(categoryId))
                 .and(hasAmountGreaterOrEqualThan(minAmount))
                 .and(hasAmountLessOrEqualThan(maxAmount))
                 .and(hasType(type))
                 .and(hasDate(startDate, endDate));
+    }
+
+    private static Specification<ExpenseEntity> hasClient(Long clientId) {
+        return (root, query, criteriaBuilder) -> {
+            Join<ExpenseEntity, ClientEntity> expensesClient = root.join("client");
+            return criteriaBuilder.equal(expensesClient.get("id"), clientId);
+        };
     }
 
     private static Specification<ExpenseEntity> hasCategory(Long categoryId) {
@@ -41,13 +50,14 @@ public class ExpenseSpecification {
     }
 
     private static Specification<ExpenseEntity> hasDate(LocalDate startDate, LocalDate endDate) {
+        String createdAt = "createdAt";
         return (root, query, criteriaBuilder) -> {
             if (startDate != null && endDate != null && endDate.plusDays(1).isAfter(startDate)) {
-                return criteriaBuilder.between(root.get("createdAt"), startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
+                return criteriaBuilder.between(root.get(createdAt), startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
             } else if (startDate != null && endDate == null && startDate.isBefore(LocalDate.now())) {
-                return criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), startDate.atStartOfDay());
+                return criteriaBuilder.greaterThanOrEqualTo(root.get(createdAt), startDate.atStartOfDay());
             } else if (endDate != null && startDate == null && endDate.isBefore(LocalDate.now())) {
-                return criteriaBuilder.lessThan(root.get("createdAt"), endDate.plusDays(1).atStartOfDay());
+                return criteriaBuilder.lessThan(root.get(createdAt), endDate.plusDays(1).atStartOfDay());
             } else {
                 return criteriaBuilder.conjunction();
             }
