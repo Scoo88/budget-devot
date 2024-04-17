@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,49 +30,49 @@ import java.util.List;
 public class ExpenseController {
     private final ExpenseService expenseService;
 
-    @PostMapping("/expense")
+    @PostMapping(value = "/expense", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Insert new expense.")
     public ResponseEntity<ExpenseResponse> registerExpense(@Valid @RequestBody ExpenseRequest request) throws DeWalletException {
         ExpenseResponse response = this.expenseService.insertExpense(request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping(value = "/expenses")
+    @GetMapping(value = "/expenses", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Get all categories.")
     public ResponseEntity<List<ExpenseResponse>> getCategories() {
         List<ExpenseResponse> response = this.expenseService.getExpenses();
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/expense/{id}")
+    @GetMapping(value = "/expense/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Get expense by ID.")
     public ResponseEntity<ExpenseResponse> getExpense(@NonNull @PathVariable(name = "id") Long id) throws DeWalletException {
         ExpenseResponse response = this.expenseService.getExpense(id);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PutMapping("/expense/{id}")
+    @PutMapping(value = "/expense/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Update expense.")
     public ResponseEntity<ExpenseResponse> updateExpense(@NonNull @PathVariable(name = "id") Long id, @Valid @RequestBody ExpenseRequest request) throws DeWalletException {
         ExpenseResponse response = this.expenseService.updateExpense(id, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PutMapping("/expense/{id}/status/{active}")
+    @PutMapping(value = "/expense/{id}/status/{active}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Update expense status.")
     public ResponseEntity<ExpenseResponse> updateExpenseStatus(@NonNull @PathVariable(name = "id") Long id, @NonNull @PathVariable(name = "active") Boolean active) throws DeWalletException {
         ExpenseResponse response = this.expenseService.updateExpenseStatus(id, active);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @DeleteMapping("/expense/{id}")
+    @DeleteMapping(value = "/expense/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Delete expense.")
     public ResponseEntity<ExpenseResponse> deleteExpense(@NonNull @PathVariable(name = "id") Long id) throws DeWalletException {
         HttpStatus response = this.expenseService.deleteExpense(id);
         return new ResponseEntity<>(response);
     }
 
-    @GetMapping("/expense/filter")
+    @GetMapping(value = "/expense/filter", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Filter expenses.")
     public ResponseEntity<List<ExpenseResponse>> filterExpenses(@RequestParam(name = "categoryId", required = false) Long categoryId,
                                                                 @RequestParam(name = "minAmount", required = false) BigDecimal minAmount,
@@ -83,14 +84,14 @@ public class ExpenseController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/expense/statistics")
+    @GetMapping(value = "/expense/statistics", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Statistics.")
-    public ResponseEntity<ExpenseStatistics> filterExpenses(@RequestParam(name = "period") Period period,
-                                                            @RequestParam(name = "month", required = false) Integer month,
-                                                            @RequestParam(name = "year") Integer year,
-                                                            @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-                                                            @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-                                                            @RequestParam(name = "categoryId", required = false) Long categoryId) throws DeWalletException {
+    public ResponseEntity<ExpenseStatistics> getStatistics(@RequestParam(name = "period") Period period,
+                                                           @RequestParam(name = "month", required = false) Integer month,
+                                                           @RequestParam(name = "year") Integer year,
+                                                           @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                           @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                                           @RequestParam(name = "categoryId", required = false) Long categoryId) throws DeWalletException {
         ExpenseStatistics response = this.expenseService.getStatistics(period, month, year, startDate, endDate, categoryId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

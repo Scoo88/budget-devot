@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,31 +22,31 @@ public class ClientController {
 
     private final ClientService clientService;
 
-    @PostMapping("/registration")
+    @PostMapping(value = "/registration", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.CLIENT, summary = "Register new client.")
     public ResponseEntity<ClientResponse> registerClient(@Valid @RequestBody ClientRequest request) {
-        ClientResponse response = clientService.registerClient(request);
+        ClientResponse response = this.clientService.registerClient(request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/client")
+    @GetMapping(value = "/client", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.CLIENT, summary = "Get client.")
     public ResponseEntity<ClientResponse> getClient() throws DeWalletException {
-        ClientResponse response = clientService.getClient();
+        ClientResponse response = this.clientService.getClient();
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PutMapping("/client")
+    @PutMapping(value = "/client", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.CLIENT, summary = "Update client.")
     public ResponseEntity<ClientResponse> updateClient(@Valid @RequestBody ClientRequest request) throws DeWalletException {
-        ClientResponse response = clientService.updateClient(request);
+        ClientResponse response = this.clientService.updateClient(request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @DeleteMapping("/client")
+    @DeleteMapping(value = "/client", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.CLIENT, summary = "Delete client.")
     public ResponseEntity<ClientResponse> deleteClient() throws DeWalletException {
-        HttpStatus response = clientService.deleteClient();
+        HttpStatus response = this.clientService.deleteClient();
         return new ResponseEntity<>(response);
     }
 }
