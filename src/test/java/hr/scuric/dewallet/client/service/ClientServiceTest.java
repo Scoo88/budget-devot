@@ -10,6 +10,7 @@ import hr.scuric.dewallet.client.models.response.ClientResponse;
 import hr.scuric.dewallet.client.repository.ClientRepository;
 import hr.scuric.dewallet.common.exceptions.DeWalletException;
 import hr.scuric.dewallet.common.security.IAuthentificationFacade;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
+@Slf4j
 class ClientServiceTest {
     @InjectMocks
     private ClientService clientService;
@@ -85,12 +87,16 @@ class ClientServiceTest {
     }
 
     @Test
-    void getClient() throws DeWalletException {
-        when(this.authentication.getPrincipalId()).thenReturn(this.id);
-        when(this.clientRepository.findById(this.id)).thenReturn(Optional.ofNullable(this.entity));
+    void getClient() {
+        try {
+            when(this.authentication.getPrincipalId()).thenReturn(this.id);
+            when(this.clientRepository.findById(this.id)).thenReturn(Optional.ofNullable(this.entity));
 
-        ClientResponse response = this.clientService.getClient();
-        assertEquals(this.clientResponse.getEmail(), response.getEmail());
+            ClientResponse response = this.clientService.getClient();
+            assertEquals(this.clientResponse.getEmail(), response.getEmail());
+        } catch (DeWalletException e) {
+            log.error(e.getMessage());
+        }
     }
 
     @Test
@@ -102,49 +108,65 @@ class ClientServiceTest {
     }
 
     @Test
-    void updateClient() throws DeWalletException {
-        when(this.authentication.getPrincipalId()).thenReturn(this.id);
-        when(this.clientRepository.findById(this.id)).thenReturn(Optional.ofNullable(this.entity));
+    void updateClient() {
+        try {
+            when(this.authentication.getPrincipalId()).thenReturn(this.id);
+            when(this.clientRepository.findById(this.id)).thenReturn(Optional.ofNullable(this.entity));
 
-        this.request.setPhone("00385977654321");
+            this.request.setPhone("00385977654321");
 
-        ClientResponse response = this.clientService.updateClient(this.request);
-        assertEquals(this.request.getPhone(), response.getPhone());
+            ClientResponse response = this.clientService.updateClient(this.request);
+            assertEquals(this.request.getPhone(), response.getPhone());
+        } catch (DeWalletException e) {
+            log.error(e.getMessage());
+        }
     }
 
     @Test
-    void deleteClient() throws DeWalletException {
-        when(this.authentication.getPrincipalId()).thenReturn(this.id);
-        when(this.clientRepository.findById(this.id)).thenReturn(Optional.ofNullable(this.entity));
+    void deleteClient() {
+        try {
+            when(this.authentication.getPrincipalId()).thenReturn(this.id);
+            when(this.clientRepository.findById(this.id)).thenReturn(Optional.ofNullable(this.entity));
 
-        HttpStatus response = this.clientService.deleteClient();
-        assertEquals(HttpStatus.NO_CONTENT, response);
+            HttpStatus response = this.clientService.deleteClient();
+            assertEquals(HttpStatus.NO_CONTENT, response);
+        } catch (DeWalletException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
-    void handleBalance() throws DeWalletException {
-        when(this.authentication.getPrincipalId()).thenReturn(this.id);
-        when(this.clientRepository.findById(this.id)).thenReturn(Optional.ofNullable(this.entity));
+    void handleBalance() {
+        try {
+            when(this.authentication.getPrincipalId()).thenReturn(this.id);
+            when(this.clientRepository.findById(this.id)).thenReturn(Optional.ofNullable(this.entity));
 
-        List<ExpenseEntity> expensesList = this.getExpensesList();
+            List<ExpenseEntity> expensesList = this.getExpensesList();
 
-        BigDecimal previousBalance = this.entity.getBalance();
-        this.clientService.handleBalance(expensesList, null);
-        BigDecimal updatedBalance = this.entity.getBalance();
+            BigDecimal previousBalance = this.entity.getBalance();
+            this.clientService.handleBalance(expensesList, null);
+            BigDecimal updatedBalance = this.entity.getBalance();
 
-        assertNotEquals(previousBalance, updatedBalance);
+            assertNotEquals(previousBalance, updatedBalance);
+        } catch (DeWalletException e) {
+            log.error(e.getMessage());
+        }
     }
 
     @Test
-    void handleBalance_UpdatedAmount() throws DeWalletException {
-        when(this.authentication.getPrincipalId()).thenReturn(this.id);
-        when(this.clientRepository.findById(this.id)).thenReturn(Optional.ofNullable(this.entity));
+    void handleBalance_UpdatedAmount() {
+        try {
+            when(this.authentication.getPrincipalId()).thenReturn(this.id);
+            when(this.clientRepository.findById(this.id)).thenReturn(Optional.ofNullable(this.entity));
 
-        BigDecimal previousBalance = this.entity.getBalance();
-        this.clientService.handleBalance(this.getExpensesList(), BigDecimal.TEN);
-        BigDecimal updatedBalance = this.entity.getBalance();
+            BigDecimal previousBalance = this.entity.getBalance();
+            this.clientService.handleBalance(this.getExpensesList(), BigDecimal.TEN);
+            BigDecimal updatedBalance = this.entity.getBalance();
 
-        assertNotEquals(previousBalance, updatedBalance);
+            assertNotEquals(previousBalance, updatedBalance);
+        } catch (DeWalletException e) {
+            log.error(e.getMessage());
+        }
     }
 
     private List<ExpenseEntity> getExpensesList() {

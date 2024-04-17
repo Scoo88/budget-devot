@@ -3,13 +3,15 @@ package hr.scuric.dewallet.budget.models.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import hr.scuric.dewallet.budget.models.entity.CategoryEntity;
-import hr.scuric.dewallet.common.model.BaseDto;
+import hr.scuric.dewallet.common.models.BaseDto;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@EqualsAndHashCode(callSuper = true)
 public class CategoryResponse extends BaseDto {
     @JsonProperty("id")
     private Long id;

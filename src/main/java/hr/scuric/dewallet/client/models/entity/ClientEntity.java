@@ -2,9 +2,10 @@ package hr.scuric.dewallet.client.models.entity;
 
 import hr.scuric.dewallet.budget.models.entity.CategoryEntity;
 import hr.scuric.dewallet.client.models.request.ClientRequest;
-import hr.scuric.dewallet.common.model.BaseEntity;
+import hr.scuric.dewallet.common.models.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,10 +14,11 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name = "clients")
+@EqualsAndHashCode(callSuper = true)
 public class ClientEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "clients_id_seq_generator")
-    @SequenceGenerator(name = "clients_id_seq_generator", sequenceName = "clients_id_seq", initialValue = 1, allocationSize = 1)
+    @SequenceGenerator(name = "clients_id_seq_generator", sequenceName = "clients_id_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "first_name", nullable = false)

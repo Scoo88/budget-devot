@@ -2,13 +2,15 @@ package hr.scuric.dewallet.client.models.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import hr.scuric.dewallet.client.models.entity.ClientEntity;
-import hr.scuric.dewallet.common.model.BaseDto;
+import hr.scuric.dewallet.common.models.BaseDto;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class ClientResponse extends BaseDto {
     @JsonProperty("firstName")
     private String firstName;

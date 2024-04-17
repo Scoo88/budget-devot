@@ -2,9 +2,10 @@ package hr.scuric.dewallet.budget.models.entity;
 
 import hr.scuric.dewallet.budget.models.request.CategoryRequest;
 import hr.scuric.dewallet.client.models.entity.ClientEntity;
-import hr.scuric.dewallet.common.model.BaseEntity;
+import hr.scuric.dewallet.common.models.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -14,10 +15,11 @@ import java.util.Set;
 @Entity
 @Table(name = "categories", uniqueConstraints = {@UniqueConstraint(name = "name_client_unique", columnNames = {
         "name", "client_id"})})
+@EqualsAndHashCode(callSuper = true)
 public class CategoryEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "categories_id_seq_generator")
-    @SequenceGenerator(name = "categories_id_seq_generator", sequenceName = "categories_id_seq", initialValue = 1, allocationSize = 1)
+    @SequenceGenerator(name = "categories_id_seq_generator", sequenceName = "categories_id_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "name", nullable = false)
