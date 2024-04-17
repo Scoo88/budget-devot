@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleArgumentException(final IllegalArgumentException e) {
-        logException(e);
+        this.logException(e);
 
         final ErrorResponse errorResponse = new ErrorResponse(Messages.EMPTY_PARAM);
         return new ResponseEntity<>(errorResponse, new HttpHeaders(), errorResponse.getStatus());
@@ -39,7 +39,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ErrorResponse> handleTypeMismatch(final MethodArgumentTypeMismatchException ex) {
-        logException(ex);
+        this.logException(ex);
         final Messages messages = Messages.INVALID_INPUT_TYPE;
 
         final String name = ex.getName();
@@ -81,7 +81,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<Object> handleNoSuchElementException(final NoSuchElementException ex) {
-        logException(ex);
+        this.logException(ex);
 
         final ErrorResponse responseBase = new ErrorResponse(HttpStatus.NOT_FOUND, 404, ex.getMessage());
 
@@ -90,7 +90,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(MethodNotAllowedException.class)
     public ResponseEntity<?> handleMethodNotAllowedException(final MethodNotAllowedException ex) {
-        logException(ex);
+        this.logException(ex);
 
         final ErrorResponse responseBase = new ErrorResponse(HttpStatus.METHOD_NOT_ALLOWED, 405, ex.getMessage());
 
@@ -99,7 +99,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<?> handleEntityNotFoundException(final EntityNotFoundException ex) {
-        logException(ex);
+        this.logException(ex);
 
         final ErrorResponse responseBase = new ErrorResponse(HttpStatus.NOT_FOUND, 404, ex.getMessage());
 
@@ -121,7 +121,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({Exception.class})
     public ResponseEntity<Object> handleAll(final Exception ex) {
-        logException(ex);
+        this.logException(ex);
 
         final ErrorResponse responseBase = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 500, ex.getMessage());
 
@@ -134,7 +134,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
                                                                   final HttpHeaders headers,
                                                                   final HttpStatusCode status,
                                                                   final WebRequest request) {
-        logException(ex);
+        this.logException(ex);
 
         final List<String> errors = new ArrayList<>();
         for (final FieldError error : ex.getBindingResult().getFieldErrors()) {
@@ -144,14 +144,14 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
             errors.add(error.getObjectName() + ": " + error.getDefaultMessage());
         }
         final ErrorResponse responseBase = new ErrorResponse(HttpStatus.BAD_REQUEST, 400, "Validation Failed", errors);
-        return handleExceptionInternal(ex, responseBase, headers, responseBase.getStatus(), request);
+        return this.handleExceptionInternal(ex, responseBase, headers, responseBase.getStatus(), request);
     }
 
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
                                                                   HttpHeaders headers, HttpStatusCode status,
                                                                   WebRequest request) {
-        logException(ex);
+        this.logException(ex);
         final List<String> errors = new ArrayList<>();
 
         if (ex.getMessage().contains(";")) {
@@ -161,7 +161,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         }
 
         final ErrorResponse responseBase = new ErrorResponse(HttpStatus.BAD_REQUEST, 400, "Validation Failed", errors);
-        return handleExceptionInternal(ex, responseBase, headers, responseBase.getStatus(), request);
+        return this.handleExceptionInternal(ex, responseBase, headers, responseBase.getStatus(), request);
     }
 
     @Override
@@ -169,7 +169,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
                                                                      final HttpHeaders headers,
                                                                      final HttpStatusCode status,
                                                                      final WebRequest request) {
-        logException(ex);
+        this.logException(ex);
 
         final StringBuilder builder = new StringBuilder();
         builder.append(ex.getContentType());
@@ -186,7 +186,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleMissingServletRequestParameter(
             final MissingServletRequestParameterException ex, final HttpHeaders headers, final HttpStatusCode status,
             final WebRequest request) {
-        logException(ex);
+        this.logException(ex);
 
         final String error = ex.getParameterName() + " parameter is missing";
         final ErrorResponse responseBase = new ErrorResponse(HttpStatus.BAD_REQUEST, 400, error);
@@ -198,7 +198,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(
             final HttpRequestMethodNotSupportedException ex, final HttpHeaders headers, final HttpStatusCode status,
             final WebRequest request) {
-        logException(ex);
+        this.logException(ex);
 
         final StringBuilder builder = new StringBuilder();
         builder.append(ex.getMethod());
@@ -215,12 +215,6 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         }
         return temp;
     }
-
-//    @ExceptionHandler(UsernameNotFoundException.class)
-//    public ResponseEntity<BudgetException> handleUsernameNotFoundException(UsernameNotFoundException ex) {
-//        BudgetException budgetException = new BudgetException(Messages.ENTITY_NOT_FOUND);
-//        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(budgetException);
-//    }
 
     private void logException(Throwable e) {
         log.error("Unhandled exception!", e);

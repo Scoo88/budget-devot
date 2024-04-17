@@ -28,49 +28,11 @@ public class ErrorResponse {
         this.errors = null;
     }
 
-    public ErrorResponse(final Messages message, final String replaceValue) {
-        this.status = message.getHttpStatus();
-        this.code = message.getCode();
-        this.message = message.getMessage().replace("{1}", replaceValue);
-        this.errors = null;
-    }
-
-    public ErrorResponse(final Messages message, final List<String> replaceValue) {
-        this.status = message.getHttpStatus();
-        this.code = message.getCode();
-
-        for (final String val : replaceValue) {
-            this.message = message.getMessage().replace("{" + replaceValue.indexOf(val + 1) + "}",
-                    (CharSequence) replaceValue);
-        }
-        this.errors = null;
-    }
-
-    public ErrorResponse(final int code, final String message) {
-        this.status = HttpStatus.OK;
-        this.code = code;
-        this.message = message;
-        this.errors = null;
-    }
-
     public ErrorResponse(final HttpStatus httpStatus, final int code, final String message) {
         this.status = httpStatus;
         this.code = code;
         this.message = message;
         this.errors = null;
-    }
-
-    public ErrorResponse(final HttpStatus httpStatus, final int code, final List<String> errors) {
-        this.code = code;
-        this.message = "";
-        this.errors = errors;
-        this.status = httpStatus;
-    }
-
-    public ErrorResponse(final int code, final String message, final List<String> errors) {
-        this.code = code;
-        this.message = message;
-        this.errors = errors;
     }
 
     public ErrorResponse(final HttpStatus httpStatus, final int code, final String message, final List<String> errors) {
