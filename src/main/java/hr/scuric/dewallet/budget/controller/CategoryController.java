@@ -28,42 +28,42 @@ public class CategoryController {
     @PostMapping("/category")
     @Operation(tags = OpenApiTags.CATEGORY, summary = "Insert new category.")
     public ResponseEntity<CategoryResponse> registerCategory(@Valid @RequestBody CategoryRequest request) {
-        CategoryResponse response = categoryService.insertCategory(request, Optional.empty());
+        CategoryResponse response = this.categoryService.insertCategory(request, Optional.empty());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/category/all")
+    @GetMapping("/categories")
     @Operation(tags = OpenApiTags.CATEGORY, summary = "Get all categories.")
     public ResponseEntity<List<CategoryResponse>> getCategories() {
-        List<CategoryResponse> response = categoryService.getCategories();
+        List<CategoryResponse> response = this.categoryService.getCategories();
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/category/{id}")
     @Operation(tags = OpenApiTags.CATEGORY, summary = "Get category by ID.")
     public ResponseEntity<CategoryResponse> getCategory(@NonNull @PathVariable(name = "id") Long id) throws DeWalletException {
-        CategoryResponse response = categoryService.getCategory(id);
+        CategoryResponse response = this.categoryService.getCategory(id);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PutMapping("/category/{id}")
     @Operation(tags = OpenApiTags.CATEGORY, summary = "Update category.")
     public ResponseEntity<CategoryResponse> updateCategory(@NonNull @PathVariable(name = "id") Long id, @Valid @RequestBody CategoryRequest request) throws DeWalletException {
-        CategoryResponse response = categoryService.updateCategory(id, request);
+        CategoryResponse response = this.categoryService.updateCategory(id, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PutMapping("/category/{id}/status/{active}")
     @Operation(tags = OpenApiTags.CATEGORY, summary = "Update category status.")
     public ResponseEntity<CategoryResponse> updateCategoryStatus(@NonNull @PathVariable(name = "id") Long id, @NonNull @PathVariable(name = "active") Boolean active) throws DeWalletException {
-        CategoryResponse response = categoryService.updateCategoryStatus(id, active);
+        CategoryResponse response = this.categoryService.updateCategoryStatus(id, active);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/category/{id}")
     @Operation(tags = OpenApiTags.CATEGORY, summary = "Delete category.")
     public ResponseEntity<CategoryResponse> deleteCategory(@NonNull @PathVariable(name = "id") Long id) throws DeWalletException {
-        HttpStatus response = categoryService.deleteCategory(id);
+        HttpStatus response = this.categoryService.deleteCategory(id);
         return new ResponseEntity<>(response);
     }
 }
