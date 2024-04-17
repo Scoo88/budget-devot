@@ -60,13 +60,4 @@ public class WebSecurityConfig {
 
         return http.build();
     }
-
-//    @Bean
-//    UserDetailsService userDetailsService() {
-//        InMemoryUserDetailsManager userDetailsService = new InMemoryUserDetailsManager();
-//        UserDetails user = User.withUsername("test").password(passwordEncoder().encode("test"))
-//                .authorities("read", "write").build();
-//        userDetailsService.createUser(user);
-//        return userDetailsService;
-//    }
 }

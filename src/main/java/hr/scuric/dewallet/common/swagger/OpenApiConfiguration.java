@@ -1,5 +1,7 @@
 package hr.scuric.dewallet.common.swagger;
 
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
@@ -10,6 +12,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@SecurityScheme(
+        type = SecuritySchemeType.HTTP,
+        name = "basicAuth",
+        scheme = "basic")
 public class OpenApiConfiguration {
     @Value("${application.url}")
     private String applicationUrl;
@@ -28,17 +34,16 @@ public class OpenApiConfiguration {
 
     @Bean
     public OpenAPI openApiInformation() {
-        Server localServer = new Server().url(applicationUrl);
+        Server localServer = new Server().url(this.applicationUrl);
 
-        Contact contact = new Contact().email(applicationEmail);
+        Contact contact = new Contact().email(this.applicationEmail);
 
-        Info info = new Info().contact(contact).description(applicationDescription).title(applicationName).version(
-                applicationVersion);
+        Info info = new Info().contact(contact).description(this.applicationDescription).title(this.applicationName).version(
+                this.applicationVersion);
 
         return new OpenAPI().info(info).addServersItem(localServer);
     }
 
-    // all
     @Bean
     public GroupedOpenApi groupAll() {
         return GroupedOpenApi.builder().group("All API").pathsToMatch("/api/v1/budget/**").build();
@@ -48,7 +53,7 @@ public class OpenApiConfiguration {
     public GroupedOpenApi groupClient() {
         return GroupedOpenApi.builder()
                 .group("Client API (group)")
-                .pathsToMatch("/api/v1/budget/client*/**")
+                .pathsToMatch("/api/v1/budget/client/**", "/api/v1/budget/registration")
                 .build();
     }
 
@@ -56,7 +61,7 @@ public class OpenApiConfiguration {
     public GroupedOpenApi groupCategory() {
         return GroupedOpenApi.builder()
                 .group("Category API (group)")
-                .pathsToMatch("/api/v1/budget/category/**")
+                .pathsToMatch("/api/v1/budget/categories", "/api/v1/budget/category/**")
                 .build();
     }
 
@@ -64,7 +69,7 @@ public class OpenApiConfiguration {
     public GroupedOpenApi groupExpense() {
         return GroupedOpenApi.builder()
                 .group("Expense API (group)")
-                .pathsToMatch("/api/v1/budget/expense/**")
+                .pathsToMatch("/api/v1/budget/expenses", "/api/v1/budget/expense/**")
                 .build();
     }
 }

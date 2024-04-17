@@ -36,7 +36,7 @@ public class ExpenseController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/expense/all")
+    @GetMapping(value = "/expenses")
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Get all categories.")
     public ResponseEntity<List<ExpenseResponse>> getCategories() {
         List<ExpenseResponse> response = this.expenseService.getExpenses();
