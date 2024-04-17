@@ -137,7 +137,9 @@ public class ExpenseService {
             end = endDate.plusDays(1).atStartOfDay();
         }
 
-        List<ExpenseStatisticsView> statistics = this.expenseRepository.getStatistics(start, end);
+        Long clientId = this.authentication.getPrincipalId();
+
+        List<ExpenseStatisticsView> statistics = this.expenseRepository.getStatistics(clientId, start, end);
         if (!statistics.isEmpty()) {
             TotalsResponse totals = new TotalsResponse();
 
@@ -152,7 +154,7 @@ public class ExpenseService {
         if (Objects.nonNull(period) && !period.equals(MONTH)) {
             Map<String, TotalsResponse> overview = new HashMap<>();
 
-            List<ExpensesPerMonth> expensesPerMonths = this.expenseRepository.getOverview(start, end);
+            List<ExpensesPerMonth> expensesPerMonths = this.expenseRepository.getOverview(clientId, start, end);
             expensesPerMonths.forEach(expensesPerMonth -> {
                 String mapMonth = expensesPerMonth.getMonth();
                 BigDecimal total = expensesPerMonth.getTotal();
