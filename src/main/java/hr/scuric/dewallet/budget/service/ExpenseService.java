@@ -40,6 +40,7 @@ public class ExpenseService {
     private final IAuthentificationFacade authentication;
 
     private final MathContext MC_2 = new MathContext(2, RoundingMode.HALF_UP);
+    private final MathContext MC_4 = new MathContext(4, RoundingMode.HALF_UP);
 
     public ExpenseResponse insertExpense(ExpenseRequest request) throws DeWalletException {
         ClientEntity clientEntity = this.authentication.getClientEntity();
@@ -148,7 +149,7 @@ public class ExpenseService {
         if (!period.equals(Period.MONTH)) {
             Map<String, TotalsResponse> overview = new HashMap<>();
 
-            List<ExpensesPerMonth> expensesPerMonths = this.expenseRepository.getYearOverview(start, end);
+            List<ExpensesPerMonth> expensesPerMonths = this.expenseRepository.getOverview(start, end);
             expensesPerMonths.forEach(expensesPerMonth -> {
                 String mapMonth = expensesPerMonth.getMonth();
                 BigDecimal total = expensesPerMonth.getTotal();
@@ -226,8 +227,10 @@ public class ExpenseService {
     }
 
     private void calculatePercentages(TotalsResponse totals) {
-        BigDecimal sum = totals.getTotalSpent().add(totals.getTotalEarned());
-        totals.setTotalEarnedPercent(totals.getTotalEarned().divide(sum, this.MC_2).multiply(BigDecimal.valueOf(100), this.MC_2));
-        totals.setTotalSpentPercent(totals.getTotalSpent().divide(sum, this.MC_2).multiply(BigDecimal.valueOf(100), this.MC_2));
+        if (Objects.nonNull(totals.getTotalSpent()) && Objects.nonNull(totals.getTotalEarned())) {
+            BigDecimal sum = totals.getTotalSpent().add(totals.getTotalEarned());
+            totals.setTotalEarnedPercent(totals.getTotalEarned().divide(sum, this.MC_4).multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
+            totals.setTotalSpentPercent(totals.getTotalSpent().divide(sum, this.MC_4).multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
+        }
     }
 }

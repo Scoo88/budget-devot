@@ -22,7 +22,6 @@ public interface ExpenseRepository extends JpaRepository<ExpenseEntity, Long>, J
 
     @Query(value = """
             select e.client_id, e.type, sum(e.amount) as total from expenses e
-            left join categories c on e.category_id = c.id
             where e.is_active = true
             and e.created_at >= :start
             and e.created_at < :end
@@ -31,12 +30,12 @@ public interface ExpenseRepository extends JpaRepository<ExpenseEntity, Long>, J
     List<ExpenseStatisticsView> getStatistics(@Param(value = "start") LocalDateTime start, @Param(value = "end") LocalDateTime end);
 
     @Query(value = """
-            select TO_CHAR(e.created_at, 'MM-YYYY') as "month", e."type", sum(e.amount) as total from expenses e\s
-            left join categories c on e.category_id = c.id
+            select TO_CHAR(e.created_at, 'MM-YYYY') as "month", e."type", sum(e.amount) as total from expenses e
             where e.is_active = true
             and e.created_at >= :start
             and e.created_at <= :end
-            group by e.client_id, e."type", "month" order by "month" desc
+            group by e.client_id, e."type", "month"
+            order by "month" desc
             """, nativeQuery = true)
-    List<ExpensesPerMonth> getYearOverview(@Param(value = "start") LocalDateTime start, @Param(value = "end") LocalDateTime end);
+    List<ExpensesPerMonth> getOverview(@Param(value = "start") LocalDateTime start, @Param(value = "end") LocalDateTime end);
 }
