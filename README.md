@@ -64,4 +64,3 @@ Follow these steps to install DeWallet on your local machine:
       - Password: admin
     - Database connection has been defined in servers.json file so you do not need to create a new server.
 4. Swagger is available at http://localhost:8226/docs
->>>>>>> develop
