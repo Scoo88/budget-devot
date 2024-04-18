@@ -18,7 +18,7 @@ Start taking control of your finances today with DeWallet!
 
 ## Installation
 
-Follow these steps to install DeWallet on your local machine:
+Make sure you have Java 17 installed and follow these steps to install DeWallet on your local machine:
 
 1. **Clone the Repository**: 
    ```bash
