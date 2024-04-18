@@ -27,4 +27,10 @@ public class ExpenseStatistics {
 
     @JsonProperty(value = "overview")
     private Map<String, TotalsResponse> overview;
+
+    @JsonProperty(value = "overviewForCategory")
+    private Map<String, TotalsResponse> overviewForCategory;
+
+    @JsonProperty(value = "overviewPerMonthPerCategory")
+    private Map<String, Map<String, TotalsResponse>> overviewPerMonthPerCategory;
 }
