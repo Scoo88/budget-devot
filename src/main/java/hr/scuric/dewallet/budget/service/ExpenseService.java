@@ -7,6 +7,7 @@ import hr.scuric.dewallet.budget.models.entity.ExpenseEntity;
 import hr.scuric.dewallet.budget.models.request.ExpenseRequest;
 import hr.scuric.dewallet.budget.models.response.ExpenseResponse;
 import hr.scuric.dewallet.budget.models.response.ExpenseStatistics;
+import hr.scuric.dewallet.budget.models.response.ExpenseStatisticsCategory;
 import hr.scuric.dewallet.budget.models.response.TotalsResponse;
 import hr.scuric.dewallet.budget.repository.ExpenseRepository;
 import hr.scuric.dewallet.budget.repository.ExpenseSpecification;
@@ -24,8 +25,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -40,7 +39,8 @@ public class ExpenseService {
     private final CategoryService categoryService;
     private final ClientService clientService;
     private final IAuthentificationFacade authentication;
-    private final MathContext MC_4 = new MathContext(4, RoundingMode.HALF_UP);
+    private final StatisticService statisticService;
+
 
     public ExpenseResponse insertExpense(ExpenseRequest request) throws DeWalletException {
         ClientEntity clientEntity = this.authentication.getClientEntity();
@@ -116,60 +116,68 @@ public class ExpenseService {
         return response;
     }
 
-    public ExpenseStatistics getStatistics(Period period, Integer month, Integer year, LocalDate startDate, LocalDate endDate, Long categoryId) throws DeWalletException {
+    public ExpenseStatistics getStatistics(Period period, Integer month, Integer year, LocalDate startDate, LocalDate endDate) throws DeWalletException {
         ExpenseStatistics response = new ExpenseStatistics();
-        response.setPeriod(period);
-        response.setMonth(month);
-        response.setYear(year);
-
-        if (Objects.nonNull(categoryId)) {
-            response.setCategory(this.categoryService.getCategory(categoryId));
-        }
+        Long clientId = this.authentication.getPrincipalId();
 
         LocalDateTime start;
         LocalDateTime end;
-        if (Objects.nonNull(period)) {
-            Map<String, LocalDateTime> dates = this.calculatePeriod(period, month, year);
-            start = dates.get("start");
-            end = dates.get("end");
-        } else {
+        if (!Objects.nonNull(period)) {
             start = startDate.atStartOfDay();
             end = endDate.plusDays(1).atStartOfDay();
+        } else {
+            Map<String, LocalDateTime> dates = this.statisticService.calculatePeriod(period, month, year);
+            start = dates.get("start");
+            end = dates.get("end");
+            response.setPeriod(period);
+            response.setMonth(month);
+            response.setYear(year);
         }
 
-        Long clientId = this.authentication.getPrincipalId();
-
-        List<ExpenseStatisticsView> statistics = this.expenseRepository.getStatistics(clientId, start, end);
+        List<ExpenseStatisticsView> statistics = this.expenseRepository.getTotalForTimerange(clientId, start, end);
         if (!statistics.isEmpty()) {
             TotalsResponse totals = new TotalsResponse();
-
-            for (ExpenseStatisticsView stat : statistics) {
-                setTotalByType(totals, stat);
-            }
-
-            this.calculatePercentages(totals);
+            statistics.forEach(stat -> StatisticService.setTotalByType(totals, stat));
+            StatisticService.calculateBalance(totals);
             response.setTotals(totals);
         }
 
-        if (Objects.nonNull(period) && !period.equals(MONTH)) {
+        if ((Objects.nonNull(period) && !period.equals(MONTH)) || Objects.isNull(period)) {
             Map<String, TotalsResponse> overview = new HashMap<>();
-
-            List<ExpensesPerMonth> expensesPerMonths = this.expenseRepository.getOverview(clientId, start, end);
-            expensesPerMonths.forEach(expensesPerMonth -> {
-                String mapMonth = expensesPerMonth.getMonth();
-                BigDecimal total = expensesPerMonth.getTotal();
-                if (!overview.containsKey(mapMonth)) {
-                    TotalsResponse newTotals = new TotalsResponse();
-                    setTotalByType(expensesPerMonth.getType(), newTotals, total);
-                    overview.put(mapMonth, newTotals);
-                } else {
-                    TotalsResponse totals = overview.get(mapMonth);
-                    setTotalByType(expensesPerMonth.getType(), totals, total);
-                    this.calculatePercentages(totals);
-                }
-            });
+            List<ExpensesPerMonth> expensesPerMonths = this.expenseRepository.getOverviewPerMonth(clientId, start, end);
+            expensesPerMonths.forEach(expensesPerMonth -> this.statisticService.mapHandler(overview, expensesPerMonth.getMonth(), expensesPerMonth.getTotal(), expensesPerMonth.getType()));
             response.setOverview(overview);
         }
+
+        Map<String, Map<String, TotalsResponse>> overview = new HashMap<>();
+        List<ExpenseStatisticsCategory> overviewMonthCategory = this.expenseRepository.getOverviewPerMonthPerCategory(clientId, start, end);
+
+        for (ExpenseStatisticsCategory expensesPerMonth : overviewMonthCategory) {
+            String mapMonth = expensesPerMonth.getMonth();
+            String categoryString;
+
+            try {
+                categoryString = this.categoryService.getById(expensesPerMonth.getCategory()).getName();
+            } catch (DeWalletException e) {
+                categoryString = "Uncategorized";
+            }
+
+            if (!overview.containsKey(mapMonth)) {
+                Map<String, TotalsResponse> categoryMap = new HashMap<>();
+                StatisticService.mapCalculationNew(expensesPerMonth.getType(), expensesPerMonth.getTotal(), categoryMap, categoryString);
+                overview.put(mapMonth, categoryMap);
+            } else {
+                Map<String, TotalsResponse> categoryMap = overview.get(mapMonth);
+                if (categoryMap.containsKey(categoryString)) {
+                    StatisticService.mapCalculationExisting(categoryMap, categoryString, expensesPerMonth.getType(), expensesPerMonth.getTotal());
+                } else {
+                    StatisticService.mapCalculationNew(expensesPerMonth.getType(), expensesPerMonth.getTotal(), categoryMap, categoryString);
+                }
+            }
+        }
+        response.setOverviewPerMonthPerCategory(overview);
+
+
         return response;
     }
 
@@ -181,61 +189,5 @@ public class ExpenseService {
         return optionalExpense.get();
     }
 
-    private Map<String, LocalDateTime> calculatePeriod(Period period, Integer month, Integer year) throws DeWalletException {
-        LocalDate start;
-        LocalDate end;
 
-        switch (period) {
-            case MONTH -> {
-                if (Objects.nonNull(month)) {
-                    start = LocalDate.of(year, month, 1);
-                    end = start.plusMonths(1).minusDays(1);
-                } else {
-                    throw new DeWalletException(Messages.INVALID_INPUT_TYPE);
-                }
-            }
-            case YEAR -> {
-                start = LocalDate.of(year, 1, 1);
-                end = start.plusYears(1).minusDays(1);
-            }
-            case Q1 -> {
-                start = LocalDate.of(year, 1, 1);
-                end = LocalDate.of(year, 3, 31);
-            }
-            case Q2 -> {
-                start = LocalDate.of(year, 4, 1);
-                end = LocalDate.of(year, 6, 30);
-            }
-            case Q3 -> {
-                start = LocalDate.of(year, 7, 1);
-                end = LocalDate.of(year, 9, 30);
-            }
-            case Q4 -> {
-                start = LocalDate.of(year, 10, 1);
-                end = LocalDate.of(year, 12, 31);
-            }
-            default -> throw new DeWalletException(Messages.INVALID_INPUT_TYPE);
-        }
-        return Map.of("start", start.atStartOfDay(), "end", end.plusDays(1).atStartOfDay());
-    }
-
-    private static void setTotalByType(ExpenseType expensesPerMonth, TotalsResponse newTotals, BigDecimal total) {
-        switch (expensesPerMonth) {
-            case INPUT -> newTotals.setTotalEarned(total);
-            case OUTPUT -> newTotals.setTotalSpent(total);
-        }
-    }
-
-    private static void setTotalByType(TotalsResponse totals, ExpenseStatisticsView stat) {
-        BigDecimal total = stat.getTotal();
-        setTotalByType(stat.getType(), totals, total);
-    }
-
-    private void calculatePercentages(TotalsResponse totals) {
-        if (Objects.nonNull(totals.getTotalSpent()) && Objects.nonNull(totals.getTotalEarned())) {
-            BigDecimal sum = totals.getTotalSpent().add(totals.getTotalEarned());
-            totals.setTotalEarnedPercent(totals.getTotalEarned().divide(sum, this.MC_4).multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
-            totals.setTotalSpentPercent(totals.getTotalSpent().divide(sum, this.MC_4).multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
-        }
-    }
 }

@@ -20,4 +20,7 @@ public class TotalsResponse {
 
     @JsonProperty(value = "totalSpent[%]")
     private BigDecimal totalSpentPercent;
+
+    @JsonProperty(value = "balance")
+    private BigDecimal balanace;
 }

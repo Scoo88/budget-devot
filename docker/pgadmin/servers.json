@@ -7,7 +7,7 @@
       "Username": "postgres",
       "Host": "postgres",
       "SSLMode": "prefer",
-      "MaintenanceDB": "budget"
+      "MaintenanceDB": "dewallet"
     }
   }
 }

@@ -86,13 +86,12 @@ public class ExpenseController {
 
     @GetMapping(value = "/expense/statistics", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(tags = OpenApiTags.EXPENSE, summary = "Statistics.")
-    public ResponseEntity<ExpenseStatistics> getStatistics(@RequestParam(name = "period") Period period,
+    public ResponseEntity<ExpenseStatistics> getStatistics(@RequestParam(name = "period", required = false) Period period,
                                                            @RequestParam(name = "month", required = false) Integer month,
-                                                           @RequestParam(name = "year") Integer year,
+                                                           @RequestParam(name = "year", required = false) Integer year,
                                                            @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-                                                           @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-                                                           @RequestParam(name = "categoryId", required = false) Long categoryId) throws DeWalletException {
-        ExpenseStatistics response = this.expenseService.getStatistics(period, month, year, startDate, endDate, categoryId);
+                                                           @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) throws DeWalletException {
+        ExpenseStatistics response = this.expenseService.getStatistics(period, month, year, startDate, endDate);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

@@ -39,7 +39,6 @@ public class ClientService {
 
         List<CategoryRequest> categoryRequests = new ArrayList<>();
         categoryRequests.add(new CategoryRequest("Salary"));
-        categoryRequests.add(new CategoryRequest("Honorary"));
         categoryRequests.add(new CategoryRequest("Utilities"));
         categoryRequests.add(new CategoryRequest("Food"));
         categoryRequests.add(new CategoryRequest("Accommodation"));
