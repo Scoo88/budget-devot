@@ -3,7 +3,7 @@
 
 ## Introduction
 
-DeWallet is a user-friendly application designed to help you manage your finances effortlessly. With DeWallet, you can track your income and expenses conveniently, categorize transactions, and gain valuable insights into your spending habits.
+DeWallet is a frontend-friendly application designed to help you manage your finances effortlessly. With DeWallet, you can track your income and expenses conveniently, categorize transactions, and gain valuable insights into your spending habits.
 
 ### Key Features:
 - **User Management**: Easily create and manage user accounts to track finances separately for each individual.
@@ -40,15 +40,13 @@ Follow these steps to install DeWallet on your local machine:
   docker compose up -d
   ```
 - Access PostgreSQL Database:
-  - PostgreSQL database is now running in a Docker container. You can access it using the following credentials:
-      - Host: localhost
-      - Port: 5432
-      - Database Name: dewallet
-      - Username: postgres
-      - Password: postgres
-- Access PgAdmin:
-    - PgAdmin is also running as a Docker container. Open your web browser and go to *http://localhost:15432*. Log in to PgAdmin using the following credentials:
+   - PostgreSQL database is now running in a Docker container.
+   - Access PgAdmin:
+    - PgAdmin is also running as a Docker container. Open your web browser and go to `http://localhost:15432`. Log in to PgAdmin using the following credentials:
       - Email: admin@admin.hr
       - Password: admin
     - Database connection has been defined in servers.json file so you do not need to create a new server.
-4. Swagger is available at http://localhost:8226/docs
+4. **Access DeWallet in Your Browser**:
+   - Once you have started the application, open your web browser and go to `http://localhost:8226` to access the DeWallet application.
+   - Swagger is available at `http://localhost:8226/docs`
+   - To login go to `http://localhost:8226/login` and to logout go to `http://localhost:8226/logout`
